@@ -1,2 +1,2 @@
-# Terminus
+# Scholarium
 Dynamic Education thing
