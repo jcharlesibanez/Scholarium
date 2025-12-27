@@ -42,11 +42,6 @@ body {
   justify-content: center;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
 button {
   border-radius: 8px;
   border: 1px solid transparent;
@@ -59,10 +54,65 @@ button {
   transition: border-color 0.25s;
 }
 
+.scholarium-header {
+  opacity: 1;
+  transition: opacity 0.25s ease;
+}
+.scholarium-header.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.scholarium-header.visible {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .panel {
+  position: relative;
   opacity: 0;
   border: 1px solid gray;
   border-radius: 8px;
+  width: min(520px, 90vw);
+  margin-bottom: 10px;
+  padding: 12px;
+  transition: opacity 0.25s ease;
+}
+
+.panel.visible {
+  opacity: 1;
+}
+
+#panel-output {
+  color: gray;
+  padding: 10px 8px 8px 8px;
+}
+
+.panel #panel-close-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: transparent;
+  border: none;
+  color: gray;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  outline: none;
+}
+.panel #panel-close-button:hover {
+  color: #fff;
+  background: rgba(255,255,255,0.04);
+}
+
+#panel-close-button {
+  position: relative;
+  right: 0;
+  font-size: 18px;
+  padding: 5px;
+  z-index: 1;
 }
 
 .entry-bar {
