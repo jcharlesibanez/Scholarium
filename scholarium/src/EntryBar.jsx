@@ -1,10 +1,10 @@
-function EntryBar({ onClick }) {
+function EntryBar({ onSubmit }) {
 
     return(
-        <div className="entry-bar">
+        <form className="entry-bar" onSubmit={onSubmit}>
             <input id="input-box" placeholder="Just enter a topic"></input>
-            <button id="go-button" onClick={onClick}>Go</button>
-        </div>
+            <button id="go-button" type="submit">Go</button>
+        </form>
     );
 }
 

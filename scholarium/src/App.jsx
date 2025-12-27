@@ -6,17 +6,26 @@ import Panel from "./Panel.jsx"
 import EntryBar from "./EntryBar.jsx"
 
 function App() {
-  const [value, setValue] = useState("Initial Text");
+  const [value, setValue] = useState("");
+  const [panelVisible, setPanelVisible] = useState(false);
 
-  const handleClick = () => {
-    setValue(prev => prev === "Initial Text" ? "Button pressed!" : "Initial Text")
+  const handleGo = (e) => {
+    e?.preventDefault();
+    setValue("Loading...");
+    setPanelVisible(true);
+  };
+
+  const handlePanelClose = (e) => {
+    e?.preventDefault();
+    setPanelVisible(false);
   }
+
   return (
     <>
+    <Header visible={panelVisible}/>
     <Background/>
-    <Panel text={value} />
-    <EntryBar onClick={handleClick} />
-    <Header/>
+    <Panel text={value} visible={panelVisible} onClose={handlePanelClose} />
+    <EntryBar onSubmit={handleGo} />
     </>
   );
 }
