@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
 
-function Background(props) {
+const Background = memo(function Background() {
   const [init, setInit] = useState(false);
   const [particleCount] = useState(150);
 
@@ -49,11 +49,10 @@ function Background(props) {
 
   return init ? (
     <Particles
-      id={props.id}
       particlesLoaded={particlesLoaded}
       options={options}
     />
   ) : null;
-}
+});
 
 export default Background;

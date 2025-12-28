@@ -1,8 +1,9 @@
-function Panel({ text, visible, onClose }) {
+function Panel({ qtext, visible, onClose }) {
   return (
     <div className={`panel ${visible ? "visible" : ""}`}>
+      <p id='question-displayer'>{qtext}</p>
       <button id="panel-close-button" aria-label="Close" onClick={onClose}>×</button>
-      <p id="panel-output">{text}</p>
+      <svg id='animation-svg' className={visible ? "visible" : ""} width="0" height="0"></svg>
     </div>
   );
 }
