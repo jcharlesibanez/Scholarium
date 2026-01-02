@@ -70,6 +70,7 @@ button {
 
 .panel {
   position: relative;
+  z-index: 2;
   opacity: 0;
   border: 1px solid gray;
   width: min(520px, 90vw);
@@ -111,6 +112,11 @@ button {
   height: 400px;
 }
 
+.panel #animation-svg .logo-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
 #panel-close-button {
   position: relative;
   right: 0;
@@ -126,6 +132,8 @@ button {
   justify-content: center;
   width: min(520px, 90vw);
   transition: transform 0.3s ease;
+  position: relative;
+  z-index: 2;
 }
 
 .entry-bar.lowered {
@@ -184,4 +192,8 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+.scholarium-header {
+  position: relative;
+  z-index: 2;
 }

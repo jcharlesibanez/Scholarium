@@ -1,4 +1,7 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import reactLogo from "./assets/react.svg"
+import { animate } from "animejs"
+
 import prompt from "./prompt.js"
 import OpenAI from "openai";
 const client = new OpenAI({
@@ -12,8 +15,21 @@ import Panel from "./Panel.jsx"
 import EntryBar from "./EntryBar.jsx"
 
 function App() {
+  const [ rotations, setRotations ] = useState(0);
+
   const [value, setValue] = useState("");
   const [panelVisible, setPanelVisible] = useState(false);
+  const [animationSpec, setAnimationSpec] = useState(null);
+  let rt = "";
+
+  async function createAnimationSpec() {
+    const response = await client.responses.create({
+      model: "gpt-5-nano",
+      input: `Explain to me how atoms work`
+    });
+    rt = response.output_text;
+    setAnimationSpec(JSON.parse(response.output_text));
+  }
 
   const handleGo = async (userInput) => {
     setPanelVisible(true);
@@ -24,18 +40,15 @@ function App() {
     }, 500);
 
     try {
-      const response = await client.responses.create({
-        model: 'gpt-5-nano',
-        input: prompt+userInput
-      });
-
-      prompt += `User:${userInput}\nYou:${response}\n`;
-
-      setValue(response.output_text);
-    } catch { setValue("An error occured in fetching a response..")
+      const animationSpec = await createAnimationSpec();
+      setValue(rt);
+    } catch (error) {
+      setValue("Couldn't parse AI output as JSON.");
     } finally {
       clearInterval(loadingInterval);
     }
+
+    setRotations(prev => prev + 1);
   };
 
   const handlePanelClose = (e) => {
@@ -48,7 +61,7 @@ function App() {
     <>
     <Header visible={panelVisible}/>
     <Background/>
-    <Panel text={value} visible={panelVisible} onClose={handlePanelClose} />
+    <Panel text={value} visible={panelVisible} onClose={handlePanelClose} animationSpec={animationSpec}/>
     <EntryBar onSubmit={handleGo} lowered={panelVisible} />
     </>
   );
