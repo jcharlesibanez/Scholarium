@@ -24,22 +24,27 @@ function App() {
       You are to create an animation on a webpage that shows atoms and rotating electrons.
       Generate JSON code with two keys.
       One key is "svg", it contains pure innerHTML for the svg.
-      The other key is "animations", it contains anime.js code in a JSON format, with key and value pairs for each property.
+      The other key is "animations", it contains anime.js code for an array of animations grouped by their targets in a JSON format, with key and value pairs for each property.
+      Do not include any string formatting techniques, just pure JSON.
+      DO NOT INCLUDE BACKSLASHES IN YOUR OUTPUT.
+      DO NOT INCLUDE SVG TAGS, JUST THE INNERHTML.  
       Do not include anything else in your output.
       `
     });
     console.log(response.output_text);
-    const parsed = JSON.parse(response.output_text);
-    setData(parsed);
-    setSvgContent(parsed.svg);
+    let parsed = JSON.parse(response.output_text);
+    if (!data) {
+      setData(parsed);
+      setSvgContent(parsed.svg);
+    }
   }
 
   useEffect(() => {
     if (svgContent && panelVisible && data) {
       data.animations.forEach(anim => {
-        animate({
-          ...anim
-        });
+        const { targets, ...params } = anim;
+        if (!targets) return;
+        animate(targets, params);
       });
     }
   }, [svgContent, panelVisible, data]);
@@ -54,15 +59,20 @@ function App() {
 
     try {
       await createAnimationSpec();
+      clearInterval(loadingInterval);
     } catch (error) {
-      setValue("Couldn't parse AI output as JSON.");
+      clearInterval(loadingInterval);
+      setValue("An error occured. Check the console. :(");
     }
   };
 
   const handlePanelClose = (e) => {
     e?.preventDefault();
     setPanelVisible(false);
+    setData(null);
+    setSvgContent(null);
     setValue("");
+    console.clear();
   }
 
   return (
@@ -75,11 +85,12 @@ function App() {
       <svg
         id='animation-svg'
         className={panelVisible ? "visible" : ""}
-        viewBox="0 0 200 200"
-        width="0"
-        height="0"
+        viewBox="0 0 520 520"
+        width="520"
+        height="520"
         role="img"
         dangerouslySetInnerHTML={{ __html: svgContent }}
+        style={{ width: "200px", height: "200px" }}
       >
       </svg>
     </div>
