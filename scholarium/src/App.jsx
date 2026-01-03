@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import reactLogo from "./assets/react.svg";
 import { animate } from "animejs";
-
-import prompt from "./prompt.js";
 import OpenAI from "openai";
 const client = new OpenAI({
   apiKey: import.meta.env.VITE_OPENAI_API_KEY,
@@ -14,25 +11,38 @@ import Background from "./Background.jsx";
 import EntryBar from "./EntryBar.jsx";
 
 function App() {
-  const [ rotations, setRotations ] = useState(0);
-
   const [value, setValue] = useState("");
   const [panelVisible, setPanelVisible] = useState(false);
   const [svgContent, setSvgContent] = useState(null);
-  let rt = "";
+  const [data, setData] = useState(null);
 
   async function createAnimationSpec() {
     const response = await client.responses.create({
       model: "gpt-5-nano",
-      input: `Generate pure anime.js code that can be copy-pasted directly into the innerHTML of an svg that explains the sharing of atoms. Do not write anything else.`
+      input:
+      `
+      You are to create an animation on a webpage that shows atoms and rotating electrons.
+      Generate JSON code with two keys.
+      One key is "svg", it contains pure innerHTML for the svg.
+      The other key is "animations", it contains anime.js code in a JSON format, with key and value pairs for each property.
+      Do not include anything else in your output.
+      `
     });
     console.log(response.output_text);
-    setSvgContent(response.output_text);
+    const parsed = JSON.parse(response.output_text);
+    setData(parsed);
+    setSvgContent(parsed.svg);
   }
 
   useEffect(() => {
-    
-  });
+    if (svgContent && panelVisible && data) {
+      data.animations.forEach(anim => {
+        animate({
+          ...anim
+        });
+      });
+    }
+  }, [svgContent, panelVisible, data]);
 
   const handleGo = async (userInput) => {
     setPanelVisible(true);
@@ -46,13 +56,7 @@ function App() {
       await createAnimationSpec();
     } catch (error) {
       setValue("Couldn't parse AI output as JSON.");
-    } finally {
-      clearInterval(loadingInterval);
-      setValue("");
     }
-    
-
-    setRotations(prev => prev + 1);
   };
 
   const handlePanelClose = (e) => {
@@ -75,7 +79,7 @@ function App() {
         width="0"
         height="0"
         role="img"
-        dangerouslySetInnerHTML={svgContent}
+        dangerouslySetInnerHTML={{ __html: svgContent }}
       >
       </svg>
     </div>
