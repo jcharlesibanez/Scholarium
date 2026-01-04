@@ -8,7 +8,6 @@ const client = new OpenAI({
 
 import Header from "./Header.jsx";
 import Background from "./Background.jsx";
-import EntryBar from "./EntryBar.jsx";
 
 function App() {
   const [value, setValue] = useState("");
@@ -16,12 +15,12 @@ function App() {
   const [svgContent, setSvgContent] = useState(null);
   const [data, setData] = useState(null);
 
-  async function createAnimationSpec() {
+  async function createAnimationSpec(userInput) {
     const response = await client.responses.create({
       model: "gpt-5-nano",
       input:
       `
-      You are to create an animation on a webpage that shows the moon rotating around the earth in an indefinite loop.
+      You are to create an animation on a webpage that responds to the following prompt: "${userInput}"
       Generate JSON code with two keys.
       One key is "svg", it contains pure innerHTML for the svg.
       The other key is "animations", it contains anime.js code for an array of animations grouped by their targets in a JSON format, with key and value pairs for each property.
@@ -78,6 +77,8 @@ function App() {
     console.clear();
   }
 
+  const [inputValue, setInputValue] = useState("");
+
   return (
     <>
     <Header visible={panelVisible}/>
@@ -91,11 +92,19 @@ function App() {
         viewBox={ svgContent ? "0 0 520 520" : "0 0 0 0"}
         role="img"
         dangerouslySetInnerHTML={{ __html: svgContent }}
-        style={{ width:"100%", height:"100%"}}
+        style={ svgContent ? { width:"100%", height:"100%"} : { width:"0%", height:"0%"}}
       >
       </svg>
     </div>
-    <EntryBar onSubmit={handleGo} lowered={panelVisible} />
+    <form className={`entry-bar${panelVisible ? " lowered" : ""}`} onSubmit={handleGo}>
+      <input 
+          id="input-box"
+          placeholder="Just enter a topic"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+      ></input>
+      <button id="go-button" type="submit">Go</button>
+    </form>
     </>
   );
 }
