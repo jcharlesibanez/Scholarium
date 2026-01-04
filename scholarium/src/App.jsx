@@ -14,13 +14,14 @@ function App() {
   const [panelVisible, setPanelVisible] = useState(false);
   const [svgContent, setSvgContent] = useState(null);
   const [data, setData] = useState(null);
+  const [inputValue, setInputValue] = useState("");
 
   async function createAnimationSpec(userInput) {
     const response = await client.responses.create({
       model: "gpt-5-nano",
       input:
       `
-      You are to create an animation on a webpage that responds to the following prompt: "${userInput}"
+      You are to create an indefinitely repeating animation on a webpage that responds to the following prompt: "${userInput}"
       Generate JSON code with two keys.
       One key is "svg", it contains pure innerHTML for the svg.
       The other key is "animations", it contains anime.js code for an array of animations grouped by their targets in a JSON format, with key and value pairs for each property.
@@ -28,7 +29,7 @@ function App() {
       Include text labels.
       Keep in mind that your illustration will appear over a black background. Do not hardcode a black background into your animation, but format it for a black background.
       DO NOT INCLUDE BACKSLASHES IN YOUR OUTPUT.
-      DO NOT INCLUDE SVG TAGS, JUST THE INNERHTML.  
+      DO NOT INCLUDE SVG TAGS, JUST THE INNERHTML.
       Do not include anything else in your output.
       `
     });
@@ -50,7 +51,8 @@ function App() {
     }
   }, [svgContent, panelVisible, data]);
 
-  const handleGo = async (userInput) => {
+  const handleGo = async (e) => {
+    e.preventDefault();
     setPanelVisible(true);
     let dotCount = 0;
     const loadingInterval = setInterval(() => {
@@ -59,7 +61,7 @@ function App() {
     }, 500);
 
     try {
-      await createAnimationSpec();
+      await createAnimationSpec(inputValue);
       clearInterval(loadingInterval);
       setValue(null);
     } catch (error) {
@@ -76,8 +78,6 @@ function App() {
     setValue("");
     console.clear();
   }
-
-  const [inputValue, setInputValue] = useState("");
 
   return (
     <>
