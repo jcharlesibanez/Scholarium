@@ -21,11 +21,13 @@ function App() {
       model: "gpt-5-nano",
       input:
       `
-      You are to create an animation on a webpage that shows atoms and rotating electrons.
+      You are to create an animation on a webpage that shows the moon rotating around the earth in an indefinite loop.
       Generate JSON code with two keys.
       One key is "svg", it contains pure innerHTML for the svg.
       The other key is "animations", it contains anime.js code for an array of animations grouped by their targets in a JSON format, with key and value pairs for each property.
       Do not include any string formatting techniques, just pure JSON.
+      Include text labels.
+      Keep in mind that your illustration will appear over a black background. Do not hardcode a black background into your animation, but format it for a black background.
       DO NOT INCLUDE BACKSLASHES IN YOUR OUTPUT.
       DO NOT INCLUDE SVG TAGS, JUST THE INNERHTML.  
       Do not include anything else in your output.
@@ -60,6 +62,7 @@ function App() {
     try {
       await createAnimationSpec();
       clearInterval(loadingInterval);
+      setValue(null);
     } catch (error) {
       clearInterval(loadingInterval);
       setValue("An error occured. Check the console. :(");
@@ -79,18 +82,16 @@ function App() {
     <>
     <Header visible={panelVisible}/>
     <Background/>
-    <div className={`panel ${panelVisible ? "visible" : ""}`}>
+    <div className={`panel ${panelVisible ? "visible" : ""}`} style={{ display:"flex", justifyContent:"center", alignItems:"center" }}>
       <p id='question-displayer'>{value}</p>
       <button id="panel-close-button" aria-label="Close" onClick={handlePanelClose}>×</button>
       <svg
         id='animation-svg'
-        className={panelVisible ? "visible" : ""}
-        viewBox="0 0 520 520"
-        width="520"
-        height="520"
+        className={ panelVisible ? "visible" : "" }
+        viewBox={ svgContent ? "0 0 520 520" : "0 0 0 0"}
         role="img"
         dangerouslySetInnerHTML={{ __html: svgContent }}
-        style={{ width: "200px", height: "200px" }}
+        style={{ width:"100%", height:"100%"}}
       >
       </svg>
     </div>
