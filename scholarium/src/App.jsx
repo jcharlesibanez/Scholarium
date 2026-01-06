@@ -1,3 +1,8 @@
+// IMPROVEMENTS TO MAKE JANUARY 7TH:
+// - FIX ANIMATION ABILITY
+// - ADD LONGER ANIMATIONS
+// - LEARN HOW TO BEST PROMPT AI
+
 import React, { useEffect, useState } from 'react';
 import { animate } from "animejs";
 import OpenAI from "openai";
@@ -10,15 +15,16 @@ import Header from "./Header.jsx";
 import Background from "./Background.jsx";
 
 function App() {
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState(null);
   const [panelVisible, setPanelVisible] = useState(false);
   const [svgContent, setSvgContent] = useState(null);
   const [data, setData] = useState(null);
   const [inputValue, setInputValue] = useState("");
+  const [elapsedTime, setElapsedTime] = useState("...");
 
   async function createAnimationSpec(userInput) {
     const response = await client.responses.create({
-      model: "gpt-5-nano",
+      model: "gpt-4.1-nano",
       input:
       `
       You are to create an indefinitely repeating animation on a webpage that responds to the following prompt: "${userInput}"
@@ -52,21 +58,29 @@ function App() {
   }, [svgContent, panelVisible, data]);
 
   const handleGo = async (e) => {
-    e.preventDefault();
-    setPanelVisible(true);
-    let dotCount = 0;
-    const loadingInterval = setInterval(() => {
-      dotCount = (dotCount + 1) % 4;
-      setValue("Loading" + ".".repeat(dotCount));
-    }, 500);
+    if (inputValue) {
+      e.preventDefault();
+      const iTime = Date.now();
+      setPanelVisible(true);
+      if (svgContent) setSvgContent(null);
+      let dotCount = 0;
+      const loadingInterval = setInterval(() => {
+        dotCount = (dotCount + 1) % 4;
+        setValue("Loading" + ".".repeat(dotCount));
+      }, 500);
 
-    try {
-      await createAnimationSpec(inputValue);
-      clearInterval(loadingInterval);
-      setValue(null);
-    } catch (error) {
-      clearInterval(loadingInterval);
-      setValue("An error occured. Check the console. :(");
+      try {
+        await createAnimationSpec(inputValue);
+        clearInterval(loadingInterval);
+        setValue(null);
+        const fTime = Date.now();
+        setElapsedTime(`Elapsed time: ${(fTime - iTime)/1000} s`);
+      } catch (error) {
+        clearInterval(loadingInterval);
+        setValue("An error occured. Check the console. :(");
+      }
+    } else {
+      setValue("Enter a request!");
     }
   };
 
@@ -75,7 +89,8 @@ function App() {
     setPanelVisible(false);
     setData(null);
     setSvgContent(null);
-    setValue("");
+    setValue(null);
+    setElapsedTime(null);
     console.clear();
   }
 
@@ -83,7 +98,7 @@ function App() {
     <>
     <Header visible={panelVisible}/>
     <Background/>
-    <div className={`panel ${panelVisible ? "visible" : ""}`} style={{ display:"flex", justifyContent:"center", alignItems:"center" }}>
+    <div className={`panel ${panelVisible ? "visible" : ""}`} style={{ display:"flex", justifyContent:"center", alignItems:"center", width: panelVisible ? "min(520px, 90vw)" : "0px" }}>
       <p id='question-displayer'>{value}</p>
       <button id="panel-close-button" aria-label="Close" onClick={handlePanelClose}>×</button>
       <svg
@@ -96,15 +111,20 @@ function App() {
       >
       </svg>
     </div>
-    <form className={`entry-bar${panelVisible ? " lowered" : ""}`} onSubmit={handleGo}>
-      <input 
-          id="input-box"
-          placeholder="Just enter a topic"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-      ></input>
-      <button id="go-button" type="submit">Go</button>
-    </form>
+    <div className="entry-stack">
+      <div className="timer" style={{ display:"flex", flexDirection:"column", justifyContent:"flex-end" }}>
+        <p style={{ fontSize:"14px" }}>{elapsedTime}</p>
+      </div>
+      <form className={`entry-bar${panelVisible ? " lowered" : ""}`} onSubmit={handleGo}>
+        <input 
+            id="input-box"
+            placeholder="Just enter a topic"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+        ></input>
+        <button id="go-button" type="submit">Go</button>
+      </form>
+    </div>
     </>
   );
 }
