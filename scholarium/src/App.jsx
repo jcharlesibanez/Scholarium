@@ -24,19 +24,16 @@ function App() {
 
   async function createAnimationSpec(userInput) {
     const response = await client.responses.create({
-      model: "gpt-4.1-nano",
+      model: "gpt-4.1-mini",
       input:
       `
-      You are to create an indefinitely repeating animation on a webpage that responds to the following prompt: "${userInput}"
-      Generate JSON code with two keys.
-      One key is "svg", it contains pure innerHTML for the svg.
-      The other key is "animations", it contains anime.js code for an array of animations grouped by their targets in a JSON format, with key and value pairs for each property.
-      Do not include any string formatting techniques, just pure JSON.
-      Include text labels.
-      Keep in mind that your illustration will appear over a black background. Do not hardcode a black background into your animation, but format it for a black background.
-      DO NOT INCLUDE BACKSLASHES IN YOUR OUTPUT.
-      DO NOT INCLUDE SVG TAGS, JUST THE INNERHTML.
-      Do not include anything else in your output.
+      - You are the computer inside of Scholarium, a software company with the goal of maximizing the average human's education.
+      - You will create a 60-second animation containing EXACTLY and ONLY what the user requests. Write JSON with an "svg" key, containing pure innerHTML, and an "animations" key, containing arrays of anime.js animations grouped by their targets.
+      - 520px dimensions.
+      - Do NOT include any escape sequences or string formatting.
+      - Use a transparent background.
+      - If any instruction is ambiguous, choose the simplest valid interpretation.
+      - User prompt: "${userInput}"
       `
     });
     console.log(response.output_text);
@@ -60,6 +57,7 @@ function App() {
   const handleGo = async (e) => {
     if (inputValue) {
       e.preventDefault();
+      console.log("REQUEST SENT")
       const iTime = Date.now();
       setPanelVisible(true);
       if (svgContent) setSvgContent(null);
@@ -75,6 +73,7 @@ function App() {
         setValue(null);
         const fTime = Date.now();
         setElapsedTime(`Elapsed time: ${(fTime - iTime)/1000} s`);
+        console.log(`${(fTime - iTime)/1000} s`);
       } catch (error) {
         clearInterval(loadingInterval);
         setValue("An error occured. Check the console. :(");
