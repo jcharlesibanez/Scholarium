@@ -1,16 +1,7 @@
-// IMPROVEMENTS TO MAKE JANUARY 7TH:
-// - FIX ANIMATION ABILITY
-// - ADD LONGER ANIMATIONS
-// - LEARN HOW TO BEST PROMPT AI
+// JANUARY 8TH: FIX SERVER CONNECTION ISSUE, ADD CAPTIONS.
 
 import React, { useEffect, useState } from 'react';
 import { animate } from "animejs";
-import OpenAI from "openai";
-const client = new OpenAI({
-  apiKey: import.meta.env.VITE_OPENAI_API_KEY,
-  dangerouslyAllowBrowser: true
-});
-
 import Header from "./Header.jsx";
 import Background from "./Background.jsx";
 
@@ -23,21 +14,16 @@ function App() {
   const [elapsedTime, setElapsedTime] = useState("...");
 
   async function createAnimationSpec(userInput) {
-    const response = await client.responses.create({
-      model: "gpt-4.1-mini",
-      input:
-      `
-      - You are the computer inside of Scholarium, a software company with the goal of maximizing the average human's education.
-      - You will create a 60-second animation containing EXACTLY and ONLY what the user requests. Write JSON with an "svg" key, containing pure innerHTML, and an "animations" key, containing arrays of anime.js animations grouped by their targets.
-      - 520px dimensions.
-      - Do NOT include any escape sequences or string formatting.
-      - Use a transparent background.
-      - If any instruction is ambiguous, choose the simplest valid interpretation.
-      - User prompt: "${userInput}"
-      `
+    const response = await fetch("http://localhost:8787/api/animation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userInput }),
     });
-    console.log(response.output_text);
-    let parsed = JSON.parse(response.output_text);
+    if (!response.ok) {
+      const errorPayload = await response.json().catch(() => null);
+      throw new Error(errorPayload?.error?.message || "OpenAI request failed.");
+    }
+    const parsed = await response.json();
     if (!data) {
       setData(parsed);
       setSvgContent(parsed.svg);
@@ -48,7 +34,6 @@ function App() {
     if (svgContent && panelVisible && data) {
       data.animations.forEach(anim => {
         const { targets, ...params } = anim;
-        if (!targets) return;
         animate(targets, params);
       });
     }
