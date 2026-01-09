@@ -1,4 +1,4 @@
-// JANUARY 8TH: FIX SERVER CONNECTION ISSUE, ADD CAPTIONS.
+// JANUARY 9TH: FIX SERVER CONNECTION ISSUE, ADD CAPTIONS.
 
 import React, { useEffect, useState } from 'react';
 import { animate } from "animejs";
@@ -14,19 +14,22 @@ function App() {
   const [elapsedTime, setElapsedTime] = useState("...");
 
   async function createAnimationSpec(userInput) {
-    const response = await fetch("http://localhost:8787/api/animation", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userInput }),
-    });
-    if (!response.ok) {
-      const errorPayload = await response.json().catch(() => null);
-      throw new Error(errorPayload?.error?.message || "OpenAI request failed.");
-    }
-    const parsed = await response.json();
-    if (!data) {
-      setData(parsed);
-      setSvgContent(parsed.svg);
+    try {
+      const res = await fetch("http://localhost:1337/api/animation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userInput }),
+      });
+      const data = await res.json();
+      console.log(data);
+      if (data === "No valid input" || typeof inputValue !== "string") {
+        setValue("Please enter a valid input!");
+      } else {
+        setData(data);
+        setSvgContent(data.svg);
+      };
+    } catch (e) {
+      console.log(e);
     }
   }
 
