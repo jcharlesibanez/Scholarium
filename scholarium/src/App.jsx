@@ -1,5 +1,3 @@
-// JANUARY 9TH: FIX SERVER CONNECTION ISSUE, ADD CAPTIONS.
-
 import React, { useEffect, useState } from 'react';
 import { animate } from "animejs";
 import Header from "./Header.jsx";
@@ -9,7 +7,7 @@ function App() {
   const [value, setValue] = useState(null);
   const [panelVisible, setPanelVisible] = useState(false);
   const [svgContent, setSvgContent] = useState(null);
-  const [data, setData] = useState(null);
+  const [animationContent, setAnimationContent] = useState(null);
   const [inputValue, setInputValue] = useState("");
   const [elapsedTime, setElapsedTime] = useState("...");
 
@@ -25,7 +23,7 @@ function App() {
       if (data === "No valid input" || typeof inputValue !== "string") {
         setValue("Please enter a valid input!");
       } else {
-        setData(data);
+        setAnimationContent(data.animations);
         setSvgContent(data.svg);
       };
     } catch (e) {
@@ -34,19 +32,20 @@ function App() {
   }
 
   useEffect(() => {
-    if (svgContent && panelVisible && data) {
-      data.animations.forEach(anim => {
+    if (svgContent && panelVisible && animationContent) {
+      animationContent.forEach((anim) => {
         const { targets, ...params } = anim;
         animate(targets, params);
       });
     }
-  }, [svgContent, panelVisible, data]);
+  }, [svgContent, panelVisible, animationContent]);
 
   const handleGo = async (e) => {
     if (inputValue) {
       e.preventDefault();
       console.log("REQUEST SENT")
       const iTime = Date.now();
+      setElapsedTime("...")
       setPanelVisible(true);
       if (svgContent) setSvgContent(null);
       let dotCount = 0;
@@ -108,6 +107,7 @@ function App() {
             placeholder="Just enter a topic"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
+            autoComplete='off'
         ></input>
         <button id="go-button" type="submit">Go</button>
       </form>
