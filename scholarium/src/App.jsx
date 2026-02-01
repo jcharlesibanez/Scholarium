@@ -1,15 +1,28 @@
 import React, { useEffect, useState } from 'react';
-import { animate } from "animejs";
 import Header from "./Header.jsx";
 import Background from "./Background.jsx";
 
 function App() {
   const [value, setValue] = useState(null);
   const [panelVisible, setPanelVisible] = useState(false);
-  const [svgContent, setSvgContent] = useState(null);
-  const [animationContent, setAnimationContent] = useState(null);
   const [inputValue, setInputValue] = useState("");
   const [elapsedTime, setElapsedTime] = useState("...");
+  const [videoFile, setVideoFile] = useState(null);
+
+  async function writeManim(code) {
+    try {
+      const fs = require('fs');
+
+      fs.writeFile('scholarium\\src\\manimation.py', code, (err) => {
+        if (err) throw err;
+        console.log("manimation.py updated");
+        setVideoFile('manimation.py');
+        console.log("videoFileState updated!")
+      })
+    } catch (e) {
+      console.log(e);
+    }
+  }
 
   async function createAnimationSpec(userInput) {
     try {
@@ -20,25 +33,15 @@ function App() {
       });
       const data = await res.json();
       console.log(data);
-      if (data === "No valid input" || typeof inputValue !== "string") {
-        setValue("Please enter a valid input!");
+      if (data !== "No valid input" && typeof inputValue === "string") {
+        writeManim(data);
       } else {
-        setAnimationContent(data.animations);
-        setSvgContent(data.svg);
+        setValue("Please enter a valid input!");
       };
     } catch (e) {
       console.log(e);
     }
   }
-
-  useEffect(() => {
-    if (svgContent && panelVisible && animationContent) {
-      animationContent.forEach((anim) => {
-        const { targets, ...params } = anim;
-        animate(targets, params);
-      });
-    }
-  }, [svgContent, panelVisible, animationContent]);
 
   const handleGo = async (e) => {
     if (inputValue) {
@@ -47,7 +50,7 @@ function App() {
       const iTime = Date.now();
       setElapsedTime("...")
       setPanelVisible(true);
-      if (svgContent) setSvgContent(null);
+      if (videoFile) setVideoFile(null);
       let dotCount = 0;
       const loadingInterval = setInterval(() => {
         dotCount = (dotCount + 1) % 4;
@@ -74,7 +77,7 @@ function App() {
     e?.preventDefault();
     setPanelVisible(false);
     setData(null);
-    setSvgContent(null);
+    setVideoFile(null);
     setValue(null);
     setElapsedTime(null);
     console.clear();
@@ -87,15 +90,13 @@ function App() {
     <div className={`panel ${panelVisible ? "visible" : ""}`} style={{ display:"flex", justifyContent:"center", alignItems:"center", width: panelVisible ? "min(520px, 90vw)" : "0px" }}>
       <p id='question-displayer'>{value}</p>
       <button id="panel-close-button" aria-label="Close" onClick={handlePanelClose}>×</button>
-      <svg
-        id='animation-svg'
+      <video
+        id='video'
         className={ panelVisible ? "visible" : "" }
-        viewBox={ svgContent ? "0 0 520 520" : "0 0 0 0"}
-        role="img"
-        dangerouslySetInnerHTML={{ __html: svgContent }}
-        style={ svgContent ? { width:"100%", height:"100%"} : { width:"0%", height:"0%"}}
+        src={ `manimation.py` }
+        style={ videoFile ? { width:"100%", height:"100%"} : { width:"0%", height:"0%"}}
       >
-      </svg>
+      </video>
     </div>
     <div className="entry-stack">
       <div className="timer" style={{ display:"flex", flexDirection:"column", justifyContent:"flex-end" }}>
