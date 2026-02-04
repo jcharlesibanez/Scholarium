@@ -11,14 +11,60 @@ function App() {
 
   async function writeManim(code) {
     try {
-      const fs = require('fs');
+      const formatManimCode = (sourceText) => {
+        let source = typeof sourceText === "string" ? sourceText.trim() : "";
+        if (!source) throw new Error("No Manim code received.");
 
-      fs.writeFile('scholarium\\src\\manimation.py', code, (err) => {
-        if (err) throw err;
-        console.log("manimation.py updated");
-        setVideoFile('manimation.py');
-        console.log("videoFileState updated!")
-      })
+        if (source.startsWith("```")) {
+          source = source.replace(/^```[a-zA-Z]*\s*/, "").replace(/```$/, "").trim();
+        }
+
+        if (!source.includes("\n") && source.includes(";")) {
+          source = source.split(";").map((line) => line.trim()).filter(Boolean).join("\n");
+        }
+
+        const lines = source.split(/\r?\n/).map((line) => line.trim());
+        const importLines = [];
+        const bodyLines = [];
+
+        for (const line of lines) {
+          if (line.startsWith("from manim import") || line.startsWith("import manim")) {
+            importLines.push(line);
+          } else if (line.length) {
+            bodyLines.push(line);
+          }
+        }
+
+        const hasImport = importLines.length > 0 || source.includes("from manim import") || source.includes("import manim");
+        const hasSceneClass = /class\s+\w+\s*\(\s*Scene\s*\)/.test(source);
+        const hasConstruct = /def\s+construct\s*\(\s*self\s*\)/.test(source);
+
+        const header = hasImport ? "" : "from manim import *\n\n";
+        if (hasSceneClass && hasConstruct) {
+          return `${header}${source}\n`;
+        }
+
+        const imports = importLines.length ? `${importLines.join("\n")}\n\n` : header;
+        const body = bodyLines.length ? bodyLines.map((line) => `        ${line}`).join("\n") : "        pass";
+
+        return `${imports}class AutoScene(Scene):\n    def construct(self):\n${body}\n`;
+      };
+
+      const formatted = formatManimCode(code);
+      const res = await fetch("http://localhost:1337/api/write-manim", {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: formatted,
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(errorText || "Failed to write manimation.py");
+      }
+
+      console.log("manimation.py updated");
+      setVideoFile("manimation.py");
+      console.log("videoFileState updated!");
     } catch (e) {
       console.log(e);
     }
@@ -31,10 +77,10 @@ function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userInput }),
       });
-      const data = await res.json();
-      console.log(data);
-      if (data !== "No valid input" && typeof inputValue === "string") {
-        writeManim(data);
+      const text = await res.text();
+      console.log(text);
+      if (text !== "No valid input" && typeof inputValue === "string") {
+        writeManim(text);
       } else {
         setValue("Please enter a valid input!");
       };
@@ -76,7 +122,7 @@ function App() {
   const handlePanelClose = (e) => {
     e?.preventDefault();
     setPanelVisible(false);
-    setData(null);
+    setVideoFile(null);
     setVideoFile(null);
     setValue(null);
     setElapsedTime(null);
