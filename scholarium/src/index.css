@@ -124,6 +124,56 @@ button {
   z-index: 1;
 }
 
+.video-shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.video-reply {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.65);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.video-reply.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.video-reply-input {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid gray;
+  background: transparent;
+  color: #fff;
+  outline: none;
+}
+
+.video-reply-input::placeholder {
+  color: #aaa;
+}
+
+.video-reply-send {
+  border-radius: 6px;
+  border: 1px solid gray;
+  background-color: #111;
+  color: #ddd;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
 .entry-bar {
   border: 1px solid gray;
   border-radius: 8px;

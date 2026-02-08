@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Header from "./Header.jsx";
 import Background from "./Background.jsx";
 
@@ -8,6 +8,9 @@ function App() {
   const [inputValue, setInputValue] = useState("");
   const [elapsedTime, setElapsedTime] = useState("...");
   const [videoFile, setVideoFile] = useState(null);
+  const [replyText, setReplyText] = useState("");
+  const [replyVisible, setReplyVisible] = useState(false);
+  const [replyPending, setReplyPending] = useState(false);
 
   async function writeManim(code) {
     try {
@@ -62,8 +65,17 @@ function App() {
         throw new Error(errorText || "Failed to write manimation.py");
       }
 
-      console.log("manimation.py updated");
-      setVideoFile("manimation.py");
+      const renderRes = await fetch("http://localhost:1337/api/render-manim", {
+        method: "POST",
+      });
+      if (!renderRes.ok) {
+        const errorText = await renderRes.text();
+        throw new Error(errorText || "Failed to render Manim animation");
+      }
+
+      const videoUrl = await renderRes.text();
+      console.log("manimation.py updated and rendered");
+      setVideoFile(videoUrl);
       console.log("videoFileState updated!");
     } catch (e) {
       console.log(e);
@@ -79,8 +91,27 @@ function App() {
       });
       const text = await res.text();
       console.log(text);
-      if (text !== "No valid input" && typeof inputValue === "string") {
-        writeManim(text);
+      if (text !== "No valid input" && typeof text === "string") {
+        await writeManim(text);
+      } else {
+        setValue("Please enter a valid input!");
+      };
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
+  async function createAnimationSpecWithContext(userInput) {
+    try {
+      const res = await fetch("http://localhost:1337/api/animation-context", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userInput }),
+      });
+      const text = await res.text();
+      console.log(text);
+      if (text !== "No valid input" && typeof text === "string") {
+        await writeManim(text);
       } else {
         setValue("Please enter a valid input!");
       };
@@ -97,6 +128,7 @@ function App() {
       setElapsedTime("...")
       setPanelVisible(true);
       if (videoFile) setVideoFile(null);
+      if (replyText) setReplyText("");
       let dotCount = 0;
       const loadingInterval = setInterval(() => {
         dotCount = (dotCount + 1) % 4;
@@ -123,11 +155,28 @@ function App() {
     e?.preventDefault();
     setPanelVisible(false);
     setVideoFile(null);
-    setVideoFile(null);
+    setReplyText("");
+    setReplyVisible(false);
     setValue(null);
     setElapsedTime(null);
     console.clear();
   }
+
+  const handleReplySubmit = async (e) => {
+    e.preventDefault();
+    if (!replyText || replyPending) return;
+    setReplyPending(true);
+    setValue("Responding");
+    try {
+      await createAnimationSpecWithContext(replyText);
+      setReplyText("");
+      setValue(null);
+    } catch (error) {
+      setValue("An error occured. Check the console. :(");
+    } finally {
+      setReplyPending(false);
+    }
+  };
 
   return (
     <>
@@ -136,13 +185,39 @@ function App() {
     <div className={`panel ${panelVisible ? "visible" : ""}`} style={{ display:"flex", justifyContent:"center", alignItems:"center", width: panelVisible ? "min(520px, 90vw)" : "0px" }}>
       <p id='question-displayer'>{value}</p>
       <button id="panel-close-button" aria-label="Close" onClick={handlePanelClose}>×</button>
-      <video
-        id='video'
-        className={ panelVisible ? "visible" : "" }
-        src={ `manimation.py` }
-        style={ videoFile ? { width:"100%", height:"100%"} : { width:"0%", height:"0%"}}
+      <div
+        className="video-shell"
+        onMouseEnter={() => setReplyVisible(true)}
+        onMouseLeave={() => setReplyVisible(false)}
       >
-      </video>
+        <video
+          id='video'
+          className={ panelVisible ? "visible" : "" }
+          src={ videoFile ?? "" }
+          controls
+          style={ videoFile ? { width:"100%", height:"100%"} : { width:"0%", height:"0%"}}
+        >
+        </video>
+        <form
+          className={`video-reply ${replyVisible && videoFile ? "visible" : ""}`}
+          onSubmit={handleReplySubmit}
+        >
+          <input
+            className="video-reply-input"
+            placeholder="Refine the animation..."
+            value={replyText}
+            onChange={(e) => setReplyText(e.target.value)}
+            disabled={!videoFile || replyPending}
+          />
+          <button
+            className="video-reply-send"
+            type="submit"
+            disabled={!videoFile || replyPending}
+          >
+            Go
+          </button>
+        </form>
+      </div>
     </div>
     <div className="entry-stack">
       <div className="timer" style={{ display:"flex", flexDirection:"column", justifyContent:"flex-end" }}>
