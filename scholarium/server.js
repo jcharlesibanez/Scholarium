@@ -182,7 +182,10 @@ const corsHeaders = {
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
 };
-console.log(process.env.OPENAI_API_KEY.slice(-4));
+console.log(process.env.ANTHROPIC_API_KEY?.slice(-4));
+
+const CLAUDE_MODEL = "claude-opus-4-5-20251101";
+const ANTHROPIC_VERSION = "2023-06-01";
 
 const MANIM_PATH = path.join(process.cwd(), "src", "manimation.py");
 const MANIM_MEDIA_ROOT = path.join(process.cwd(), "media");
@@ -315,16 +318,18 @@ const server = http.createServer(async (req, res) => {
                 const priorCode = await readFile(MANIM_PATH, "utf8");
                 const combinedInput = `PREVIOUS_CODE:\n${priorCode}\n\nUSER_REQUEST:\n${userInput}\n\nReturn full updated Manim code only.`;
 
-                const upstream = await fetch("https://api.openai.com/v1/responses", {
+                const upstream = await fetch("https://api.anthropic.com/v1/messages", {
                     method: "POST",
                     headers: {
-                        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+                        "x-api-key": process.env.ANTHROPIC_API_KEY,
+                        "anthropic-version": ANTHROPIC_VERSION,
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
-                        model: "gpt-5.2-codex",
-                        input: [
-                            { role: "system", content: SYSTEM_PROMPT },
+                        model: CLAUDE_MODEL,
+                        max_tokens: 2048,
+                        system: SYSTEM_PROMPT,
+                        messages: [
                             { role: "user", content: combinedInput },
                         ],
                     }),
@@ -337,9 +342,7 @@ const server = http.createServer(async (req, res) => {
                 }
 
                 const json = JSON.parse(upstreamText);
-                const text =
-                json?.output?.find((i) => i.type === "message")?.content?.find((c) => c.type === "output_text")?.text
-                ?? "{}";
+                const text = json?.content?.find((c) => c.type === "text")?.text ?? "";
 
                 res.writeHead(200, { "Content-Type": "text/plain", ...corsHeaders });
                 console.log(`\nOUTPUT:\n${text}\n---------------------------`);
@@ -367,16 +370,18 @@ const server = http.createServer(async (req, res) => {
         const { userInput } = JSON.parse(body || "{}");
         if (!userInput) { res.end("No valid input"); return; };
 
-        const upstream = await fetch("https://api.openai.com/v1/responses", {
+        const upstream = await fetch("https://api.anthropic.com/v1/messages", {
             method: "POST",
             headers: {
-                Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+                "x-api-key": process.env.ANTHROPIC_API_KEY,
+                "anthropic-version": ANTHROPIC_VERSION,
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                model: "gpt-5.2-codex",
-                input: [
-                    { role: "system", content: SYSTEM_PROMPT },
+                model: CLAUDE_MODEL,
+                max_tokens: 2048,
+                system: SYSTEM_PROMPT,
+                messages: [
                     { role: "user", content: userInput },
                 ],
             }),
@@ -389,9 +394,7 @@ const server = http.createServer(async (req, res) => {
         }
 
         const json = JSON.parse(upstreamText);
-        const text =
-        json?.output?.find((i) => i.type === "message")?.content?.find((c) => c.type === "output_text")?.text
-        ?? "{}";
+        const text = json?.content?.find((c) => c.type === "text")?.text ?? "";
 
         res.writeHead(200, { "Content-Type": "text/plain", ...corsHeaders });
         console.log(`\nOUTPUT:\n${text}\n---------------------------`);
